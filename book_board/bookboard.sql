@@ -113,6 +113,7 @@ SELECT * FROM tb_bookrecord;
 INSERT INTO tb_bookrecord(user_id, b_isbn, r_date, r_page)
 VALUES('aaaa', '9791160406504', TO_DATE('2024-11-10', 'YYYY-MM-DD'), 30);
 
+--상세 기록 조회
 SELECT b.b_title, b.b_author
      , TO_CHAR(a.r_date, 'YYYY-MM-DD') as r_date
      , a.r_page
@@ -124,5 +125,32 @@ SELECT b.b_title, b.b_author
 FROM tb_bookrecord a, tb_book b
 WHERE a.b_isbn = b.b_isbn
 AND a.user_id = 'aaaa';
+
+UPDATE tb_book SET b_end_yn='Y' WHERE b_isbn='9791160406504';
+UPDATE tb_book SET b_create_dt=TO_DATE('2024-11-09','YYYY-MM-DD') WHERE b_isbn='9791160406504';
+UPDATE tb_book SET b_update_dt=TO_DATE('2024-11-11','YYYY-MM-DD') WHERE b_isbn='9791160406504';
+
+--다 읽은 책 조회
+SELECT distinct b.b_title, b.b_author, b.b_page
+     , TO_CHAR(b.b_create_dt, 'YYYY-MM-DD') as b_create_dt
+     , TO_CHAR(b.b_update_dt, 'YYYY-MM-DD') as b_update_dt
+     ,CASE WHEN b.b_category = '000' THEN '총류, 컴퓨터과학'
+             WHEN b.b_category = '100' THEN '철학, 심리학, 윤리학'
+             WHEN b.b_category = '200' THEN '종교'
+             WHEN b.b_category = '300' THEN '사회과학'
+             WHEN b.b_category = '400' THEN '어학'
+             WHEN b.b_category = '500' THEN '순수과학'
+             WHEN b.b_category = '600' THEN '기술과학'
+             WHEN b.b_category = '700' THEN '예술'
+             WHEN b.b_category = '800' THEN '문학'
+             WHEN b.b_category = '900' THEN '역사'
+             ELSE '기타'
+        END as b_category
+     , b.b_memo
+FROM tb_bookrecord a, tb_book b, tb_user c
+WHERE a.b_isbn = b.b_isbn
+AND a.user_id = c.user_id
+AND b.b_end_yn = 'Y'
+AND c.user_id='aaaa';
 
 commit;
