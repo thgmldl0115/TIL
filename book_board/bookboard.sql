@@ -86,9 +86,43 @@ SELECT b_end_yn, b_title, b_author,
 FROM tb_book
 WHERE user_id='aaaa';
 
+SELECT b_title, b_author, b_isbn
+FROM tb_book
+WHERE user_id = 'aaaa';
+
+
+/*
+    독서 기록 테이블
+    user_id(fk),
+    isbn(fk), 읽은 날짜, 읽은 페이지
+*/
+CREATE TABLE tb_bookRecord (
+     user_id VARCHAR2(100) 
+    ,b_isbn VARCHAR2(100)
+    ,r_date DATE
+    ,r_page NUMBER
+);
+--DROP TABLE tb_bookRecord;
+ALTER TABLE tb_bookRecord ADD CONSTRAINT fk_bookRecord 
+FOREIGN KEY(user_id) REFERENCES tb_user (user_id);
+ALTER TABLE tb_bookRecord ADD CONSTRAINT fk2_bookRecord 
+FOREIGN KEY(b_isbn) REFERENCES tb_book (b_isbn);
+
+SELECT * FROM tb_bookrecord;
+
+INSERT INTO tb_bookrecord(user_id, b_isbn, r_date, r_page)
+VALUES('aaaa', '9791160406504', TO_DATE('2024-11-10', 'YYYY-MM-DD'), 30);
+
+SELECT b.b_title, b.b_author
+     , TO_CHAR(a.r_date, 'YYYY-MM-DD') as r_date
+     , a.r_page
+     , SUM(a.r_page) OVER(PARTITION BY a.b_isbn
+                            ORDER BY a.r_date
+                            ROWS BETWEEN UNBOUNDED PRECEDING 
+                                    AND CURRENT ROW) as sum_page
+     , b.b_page
+FROM tb_bookrecord a, tb_book b
+WHERE a.b_isbn = b.b_isbn
+AND a.user_id = 'aaaa';
 
 commit;
-
-
-
-
