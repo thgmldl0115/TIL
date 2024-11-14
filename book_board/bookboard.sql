@@ -157,6 +157,18 @@ FROM tb_book
 WHERE b_isbn = '9791170401421' 
 AND user_id='aaaa';
 
+-- 기록 삭제시 완독여부 조정
+UPDATE tb_book a
+SET a.b_end_yn = 'N'
+WHERE (a.b_isbn, a.b_page) NOT IN (
+                                SELECT b.b_isbn, SUM(b.r_page) OVER(PARTITION BY b.b_isbn)
+                                FROM tb_bookrecord b
+                                WHERE b.b_isbn = a.b_isbn
+                                AND a.user_id = b.user_id
+                                )
+AND a.user_id='aaaa';
+commit;
+-- 기간 업데이트
 UPDATE tb_book a
 SET (a.b_create_dt, a.b_update_dt) = (
                                         SELECT distinct MIN(r_date) OVER(PARTITION BY b.b_isbn)
@@ -166,9 +178,39 @@ SET (a.b_create_dt, a.b_update_dt) = (
                                         AND a.user_id = b.user_id(+)
                                         AND  b.r_date IS NOT NULL
                                         )
-WHERE a.user_id='lsh111';
+WHERE a.user_id='admin';
+SELECT * FROM tb_user;
+SELECT count(*) FROM tb_book WHERE user_id='test';
+commit;
+-- 데이터 생성
+INSERT INTO tb_book(user_id, b_title, b_author, b_dicount, b_isbn, b_page, b_category)
+SELECT 'admin', a.b_title, a.b_author, a.b_dicount, a.b_isbn||'025', a.b_page+2, a.b_category
+FROM tb_book a
+WHERE user_id LIKE 'admin';
 
-SELECT * FROM tb_book WHERE user_id='lsh111';
+INSERT INTO tb_bookrecord(user_id, b_isbn, r_date, r_page)
+SELECT 'admin', a.b_isbn||'025', r_date, r_page+1
+FROM tb_bookrecord a
+WHERE user_id LIKE 'admin';
+
+DELETE tb_book
+WHERE user_id LIKE 'admin';
+
+-- ml 학습
+SELECT a.b_isbn
+             , a.b_page
+             , a.b_category
+             , ROUND(AVG(b.r_page), 2) AS read_speed
+             , MIN(b.r_date) AS start_dt
+             , MAX(b.r_date) AS end_dt
+             , COUNT( b.r_date) AS days_since_last_read
+        FROM tb_book a
+           , tb_bookrecord b
+        WHERE a.b_isbn = b.b_isbn
+        GROUP BY a.b_isbn
+               , a.b_page
+               , a.b_category
+        ORDER BY days_since_last_read DESC;
 
 SELECT distinct MIN(r_date) OVER(PARTITION BY b.b_isbn)
               ,MAX(r_date) OVER(PARTITION BY b.b_isbn)
@@ -310,16 +352,7 @@ SELECT CASE b_category WHEN '000' THEN '총류, 컴퓨터과학'
 FROM tb_book
 GROUP BY b_category;
 
--- 데이터 생성
-INSERT INTO tb_book(user_id, b_title, b_author, b_dicount, b_isbn, b_page, b_category)
-SELECT 'ml11', a.b_title, a.b_author, a.b_dicount, a.b_isbn||'61', a.b_page-1, a.b_category
-FROM tb_book a
-WHERE user_id='ml12';
 
-INSERT INTO tb_bookrecord(user_id, b_isbn, r_date, r_page)
-SELECT 'ml11', a.b_isbn||'61', r_date-1, r_page-1
-FROM tb_bookrecord a
-WHERE user_id='ml12';
 
 
 commit;
