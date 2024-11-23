@@ -76,4 +76,4 @@ pip install plotly
 [24년10월.md](https://github.com/thgmldl0115/TIL/blob/main/2024.10/24년10월.md)
 
 ## 2024.11
-[24년11월.md](https://github.com/thgmldl0115/TIL/blob/main/2024.10/24년11월.md)
+[24년11월.md](https://github.com/thgmldl0115/TIL/blob/main/2024.11/24년11월.md)
